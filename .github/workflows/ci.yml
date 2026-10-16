@@ -1,0 +1,47 @@
+# 持续集成：单元测试 → 打包，最后校验 dist/index.mjs 与源码一致。
+#
+# 说明：
+#   - 测试用 Node 的测试运行器直接跑 tests/，不需要构建产物。
+#   - 打包由 Bun 完成（scripts/build.js 会调用 bun build），需要安装 Bun。
+#   - 最后一步用 git diff 校验提交进去的 dist/index.mjs 是否与源码同步，
+#     防止有人改了 src/ 却忘了重新构建（Bun 的产出去除了时间戳，可重复复现）。
+
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+# 固定 Bun 版本：产物 dist/index.mjs 会被提交，且下面用它和源码比对。
+# 升级 Bun 时需要本地重新构建并提交新的 dist/index.mjs。
+env:
+    BUN_VERSION: 1.4.3
+
+# 同一分支的新推送取消上一次仍在跑的检查，节省 CI 时间。
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+
+            - uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 单元测试
+              run: npm test
+
+            - name: 打包
+              run: npm run build
+
+            - name: 校验 dist/index.mjs 已同步
+              run: git diff --exit-code -- dist/index.mjs

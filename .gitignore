@@ -1,0 +1,10 @@
+# 依赖与本地构建缓存
+node_modules/
+*.tgz
+
+# 编辑器与本地工具配置（不随仓库分发）
+.idea/
+.mcp.json
+
+# macOS
+.DS_Store

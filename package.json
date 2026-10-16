@@ -8,7 +8,19 @@
     ".": "./dist/index.mjs",
     "./server": "./dist/index.mjs"
   },
-  "files": ["dist/index.mjs", "assets/icon-magpie.png", "README.md", "README.en.md", "LICENSE", "THIRD_PARTY_LICENSES.txt"],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node --test tests/",
+    "test:watch": "node --test --watch tests/"
+  },
+  "files": [
+    "dist/index.mjs",
+    "assets/icon-magpie.png",
+    "README.md",
+    "README.en.md",
+    "LICENSE",
+    "THIRD_PARTY_LICENSES.txt"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mu-zi-lee/magpie-doubao-translate.git"
@@ -17,7 +29,13 @@
   "bugs": {
     "url": "https://github.com/mu-zi-lee/magpie-doubao-translate/issues"
   },
-  "keywords": ["opencode", "opencode-plugin", "magpie", "doubao", "translation"],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "magpie",
+    "doubao",
+    "translation"
+  ],
   "license": "MIT",
   "magpie": {
     "icon": "https://raw.githubusercontent.com/mu-zi-lee/magpie-doubao-translate/v0.1.2/assets/icon-magpie.png",

@@ -62,19 +62,31 @@ v0.1.1 随插件打包头像图标，安装或更新后，支持自定义插件�
 
 v0.1.2 更新为新的头像图标，并提供无损压缩的 PNG，保留原图尺寸和像素内容。
 
-## 从本地主项目构建
+## 从源码构建
 
-在主项目目录运行：
+源码按模块拆分为 `src/`，`dist/index.mjs` 由构建脚本打包生成，请勿手工修改。
+构建需要 Bun，测试需要 Node.js 22.18+：
 
 ```sh
-npm ci
-npm run build:plugin
-magpie plugin add ./magpie-plugin
+npm run build
+npm test
+magpie plugin add .
 magpie plugin login doubao-translate
 ```
 
-也可以在 Magpie 的「插件 → 添加插件」填写 `magpie-plugin` 文件夹的绝对路径。
-文件夹必须先构建；插件包已包含运行时依赖，无安装脚本。
+也可以在 Magpie 的「插件 → 添加插件」填写本仓库根目录的绝对路径。
+插件包已包含运行时依赖，无安装脚本。
+
+可用脚本：
+
+| 命令 | 作用 |
+| --- | --- |
+| `npm test` | 运行全部单元测试与协议行为测试 |
+| `npm test:watch` | 监听模式跑测试 |
+| `npm run build` | 用 Bun 打包出 `dist/index.mjs` |
+
+`.github/workflows/ci.yml` 会在推送与 PR 上执行同样的检查，并额外校验
+`dist/index.mjs` 与 `src/` 保持同步（改了源码忘记重新构建会让 CI 失败）。
 
 登录时粘贴完整 Cookie Header 或浏览器导出的 Cookie JSON，可填写账号名称。
 必须包含 `sessionid`、`sid_tt` 和 `uid_tt`，登录时会请求豆包检测有效性。
@@ -135,15 +147,30 @@ magpie provider test doubao-translate doubao-ai
 ```
 
 该命令验证连通性，翻译验收还应明确发送目标语言和原文。
-开发检查使用主项目的 `npm run typecheck`、`npm test` 和 `npm run build`。
+开发检查在本仓库运行 `npm test` 和 `npm run build`。
 本地 mock 和 Bun 加载检查不代表真实 Magpie、Cookie 或豆包翻译验收。
 官方 Magpie Bun 插件宿主的模拟上游检查已覆盖加载、Cookie 登录保存和流式返回；真实豆包与远端客户端仍需验收。
 插件打包了 Zod，其 MIT 许可证在 `THIRD_PARTY_LICENSES.txt`。
 
+## 源码结构
+
+| 路径 | 职责 |
+| --- | --- |
+| `src/magpie/plugin.js` | Magpie 插件入口：供应商注册、Cookie 登录、请求分发 |
+| `src/protocols/` | 三种协议的请求适配与响应格式化 |
+| `src/doubao/` | 豆包网页接口客户端、SSE 解析、语言表 |
+| `src/core/` | 错误类型、并发闸门、分段、翻译编排、提示词解析 |
+| `src/auth/`、`src/admin/` | Cookie 解析与导入、账号失败分类 |
+| `src/config/` | 环境变量 schema（插件以自身选项填充） |
+| `src/vendor/zod.js` | 预构建的 Zod v4，供 schema 使用 |
+| `tests/plugin.test.js` | 端到端协议行为测试（模拟豆包上游驱动 loader.fetch） |
+| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.js` | 各模块单元测试（切分、语言、Cookie、协议适配、上游客户端、配置、编排重试） |
+| `scripts/build.js` | 用 Bun 把 `src/` 打包成 `dist/index.mjs` |
+
 构建后可以创建独立 npm 包，无须运行安装脚本：
 
 ```sh
-npm pack ./magpie-plugin
+npm pack
 ```
 
 当前通过 GitHub 发布仓库安装，未发布到 npm 或插件推荐市场。

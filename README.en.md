@@ -62,19 +62,32 @@ v0.1.1 bundles a custom avatar icon. Magpie versions that support custom plugin 
 
 v0.1.2 refreshes the avatar with a losslessly compressed PNG, preserving the original dimensions and image data.
 
-## Build from the Local Main Project
+## Build from Source
 
-Run the following in the main project's directory:
+The source lives in `src/`, split by module. `dist/index.mjs` is produced by the build script; do not edit it by hand.
+Building requires Bun; testing requires Node.js 22.18+:
 
 ```sh
-npm ci
-npm run build:plugin
-magpie plugin add ./magpie-plugin
+npm run build
+npm test
+magpie plugin add .
 magpie plugin login doubao-translate
 ```
 
-Alternatively, enter the absolute path to the `magpie-plugin` folder in Magpie's Plugins > Add Plugin page.
-Build the folder first. The plugin package includes its runtime dependencies and has no installation scripts.
+Alternatively, enter the absolute path to this repository's root in Magpie's Plugins > Add Plugin page.
+The plugin package includes its runtime dependencies and has no installation scripts.
+
+Available scripts:
+
+| Command | Purpose |
+| --- | --- |
+| `npm test` | Run all unit tests and protocol behaviour tests |
+| `npm test:watch` | Run tests in watch mode |
+| `npm run build` | Bundle `dist/index.mjs` with Bun |
+
+`.github/workflows/ci.yml` runs the same checks on pushes and pull requests, and additionally
+verifies that `dist/index.mjs` is in sync with `src/` (forgetting to rebuild after editing the
+source fails CI).
 
 During sign-in, paste a complete Cookie header or browser-exported cookie JSON. You may also enter an account name.
 The cookies must include `sessionid`, `sid_tt`, and `uid_tt`. The plugin contacts Doubao during sign-in to validate them.
@@ -135,15 +148,30 @@ magpie provider test doubao-translate doubao-ai
 ```
 
 This command checks connectivity. Translation acceptance checks should also explicitly send source text and a target language.
-For development checks, run `npm run typecheck`, `npm test`, and `npm run build` in the main project.
+For development checks, run `npm test` and `npm run build` in this repository.
 Local mock tests and Bun loading checks do not constitute acceptance testing with a real Magpie instance, cookies, or Doubao translation.
 Checks using the official Magpie Bun plugin host and a simulated upstream have covered loading, saving cookies during sign-in, and streaming responses. Real Doubao translation and remote clients still require acceptance testing.
 The plugin bundles Zod; its MIT license is included in `THIRD_PARTY_LICENSES.txt`.
 
+## Source Layout
+
+| Path | Responsibility |
+| --- | --- |
+| `src/magpie/plugin.js` | Magpie plugin entry: provider registration, cookie sign-in, request dispatch |
+| `src/protocols/` | Request adapters and response formatters for the three protocols |
+| `src/doubao/` | Doubao web client, SSE parser, and the language table |
+| `src/core/` | Errors, concurrency gate, segmentation, translation orchestration, prompt parsing |
+| `src/auth/`, `src/admin/` | Cookie parsing/import and account failure classification |
+| `src/config/` | Environment schema (the plugin fills it from its own options) |
+| `src/vendor/zod.js` | Prebuilt Zod v4 used by the schemas |
+| `tests/plugin.test.js` | End-to-end protocol behaviour tests driven by a simulated upstream |
+| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.js` | Unit tests per module (segmentation, languages, cookies, protocol adaptation, upstream client, config, orchestration and retries) |
+| `scripts/build.js` | Bundles `src/` into `dist/index.mjs` with Bun |
+
 After building, you can create a standalone npm package without running installation scripts:
 
 ```sh
-npm pack ./magpie-plugin
+npm pack
 ```
 
 The plugin is currently installed through its GitHub distribution repository. It has not been published to npm or the recommended plugin marketplace.

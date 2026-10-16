@@ -64,10 +64,13 @@ v0.1.2 refreshes the avatar with a losslessly compressed PNG, preserving the ori
 
 ## Build from Source
 
-The source lives in `src/`, split by module. `dist/index.mjs` is produced by the build script; do not edit it by hand.
-Building requires Bun; testing requires Node.js 22.18+:
+The source lives in `src/`, split by module and written in TypeScript. `dist/index.mjs` is produced by the build script; do not edit it by hand.
+Building requires Bun. Type checking requires Node.js plus the development dependencies installed by `npm install` (TypeScript).
+Node.js 22.18+ and Bun both run `.ts` directly, so the tests need no pre-compilation step:
 
 ```sh
+npm install
+npm run typecheck
 npm run build
 npm test
 magpie plugin add .
@@ -81,9 +84,12 @@ Available scripts:
 
 | Command | Purpose |
 | --- | --- |
+| `npm run typecheck` | Full type check with `tsc` (emits nothing) |
+| `npm run typecheck:watch` | Type check in watch mode |
 | `npm test` | Run all unit tests and protocol behaviour tests |
 | `npm test:watch` | Run tests in watch mode |
 | `npm run build` | Bundle `dist/index.mjs` with Bun |
+| `npm run verify` | Type check, test, then build; run this before committing |
 
 `.github/workflows/ci.yml` runs the same checks on pushes and pull requests, and additionally
 verifies that `dist/index.mjs` is in sync with `src/` (forgetting to rebuild after editing the
@@ -157,16 +163,18 @@ The plugin bundles Zod; its MIT license is included in `THIRD_PARTY_LICENSES.txt
 
 | Path | Responsibility |
 | --- | --- |
-| `src/magpie/plugin.js` | Magpie plugin entry: provider registration, cookie sign-in, request dispatch |
+| `src/magpie/plugin.ts` | Magpie plugin entry: provider registration, cookie sign-in, request dispatch |
+| `src/types.ts` | Shared domain types and the host interface |
 | `src/protocols/` | Request adapters and response formatters for the three protocols |
 | `src/doubao/` | Doubao web client, SSE parser, and the language table |
 | `src/core/` | Errors, concurrency gate, segmentation, translation orchestration, prompt parsing |
 | `src/auth/`, `src/admin/` | Cookie parsing/import and account failure classification |
 | `src/config/` | Environment schema (the plugin fills it from its own options) |
 | `src/vendor/zod.js` | Prebuilt Zod v4 used by the schemas |
-| `tests/plugin.test.js` | End-to-end protocol behaviour tests driven by a simulated upstream |
-| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.js` | Unit tests per module (segmentation, languages, cookies, protocol adaptation, upstream client, config, orchestration and retries) |
-| `scripts/build.js` | Bundles `src/` into `dist/index.mjs` with Bun |
+| `src/vendor/zod.d.ts` | Types for the subset of that prebuilt bundle this project uses |
+| `tests/plugin.test.ts` | End-to-end protocol behaviour tests driven by a simulated upstream |
+| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.ts` | Unit tests per module (segmentation, languages, cookies, protocol adaptation, upstream client, config, orchestration and retries) |
+| `scripts/build.ts` | Bundles `src/` into `dist/index.mjs` with Bun |
 
 After building, you can create a standalone npm package without running installation scripts:
 

@@ -1,0 +1,37 @@
+{
+    // 类型检查配置。
+    //
+    // 本仓库不把 TypeScript 编译成 JS：Node 22.18+ 与 Bun 都能直接运行 .ts，
+    // 打包交给 Bun（见 scripts/build.ts）。所以这里只做类型检查（noEmit）。
+    //
+    // 关键约束：
+    //   erasableSyntaxOnly  只允许「可擦除」语法（不能用 enum / namespace / 参数属性），
+    //                       保证 Node 直接运行 .ts 时行为与类型检查一致
+    //   allowImportingTsExtensions  源码之间用 "./x.ts" 显式引用，
+    //                       Node 原生 strip-types 不会重写导入路径
+    "compilerOptions": {
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "target": "esnext",
+        "lib": ["esnext"],
+        "types": ["node"],
+
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "erasableSyntaxOnly": true,
+        "allowImportingTsExtensions": true,
+        "noUncheckedSideEffectImports": true,
+        "moduleDetection": "force",
+        "skipLibCheck": true,
+        "noEmit": true
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"]
+}

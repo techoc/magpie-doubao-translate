@@ -1,8 +1,9 @@
-# 持续集成：单元测试 → 打包，最后校验 dist/index.mjs 与源码一致。
+# 持续集成：类型检查 → 单元测试 → 打包，最后校验 dist/index.mjs 与源码一致。
 #
 # 说明：
-#   - 测试用 Node 的测试运行器直接跑 tests/，不需要构建产物。
-#   - 打包由 Bun 完成（scripts/build.js 会调用 bun build），需要安装 Bun。
+#   - 源码是 TypeScript，但仓库不做「先编译再运行」的两段式流程；
+#     Node.js 22.18+ 与 Bun 都能直接执行 .ts，因此测试步骤不需要构建产物。
+#   - 打包由 Bun 完成（scripts/build.ts 会调用 bun build），需要安装 Bun。
 #   - 最后一步用 git diff 校验提交进去的 dist/index.mjs 是否与源码同步，
 #     防止有人改了 src/ 却忘了重新构建（Bun 的产出去除了时间戳，可重复复现）。
 
@@ -29,13 +30,22 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            # Node 22.18+ 才支持直接运行 .ts（类型擦除）；这里用 LTS 版本，
+            # 顺带避开早期 22.x 中测试运行器对 .ts 用例发现的差异。
             - uses: actions/setup-node@v4
               with:
                   node-version: 24
+                  cache: npm
 
             - uses: oven-sh/setup-bun@v2
               with:
                   bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 安装依赖
+              run: npm ci
+
+            - name: 类型检查
+              run: npm run typecheck
 
             - name: 单元测试
               run: npm test

@@ -1,7 +1,7 @@
-// 由 scripts/build.js 从 src/ 生成，请勿手工修改。
+// 由 scripts/build.ts 从 src/ 生成，请勿手工修改。
 // 图标在运行时从 ../assets/icon-magpie.png 读取，
 // 因此本文件必须保持在包根目录下一层。
-// src/magpie/plugin.js
+// src/magpie/plugin.ts
 import { createHash, randomUUID as randomUUID2 } from "node:crypto";
 
 // src/vendor/zod.js
@@ -19407,7 +19407,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// src/assets.js
+// src/assets.ts
 import { readFile } from "node:fs/promises";
 var ICON_URL = new URL("../assets/icon-magpie.png", import.meta.url);
 async function loadProviderIcon() {
@@ -19415,8 +19415,14 @@ async function loadProviderIcon() {
   return "data:image/png;base64," + png.toString("base64");
 }
 
-// src/core/errors.js
+// src/core/errors.ts
 class ServiceError extends Error {
+  code;
+  status;
+  retryable;
+  param;
+  upstreamCode;
+  upstreamStatus;
   constructor(code, status, message, retryable = false, param = null, upstreamCode, upstreamStatus) {
     super(message);
     this.code = code;
@@ -19435,10 +19441,10 @@ function isServiceError(error) {
   return error instanceof ServiceError;
 }
 
-// src/core/translator.js
+// src/core/translator.ts
 import { setTimeout as delay } from "node:timers/promises";
 
-// src/core/models.js
+// src/core/models.ts
 var MODEL_ENGINE_MAP = {
   "doubao-ai": "1",
   "volcengine-translate": "0",
@@ -19459,11 +19465,14 @@ function resolveModel(value) {
   return value;
 }
 
-// src/core/concurrency.js
+// src/core/concurrency.ts
 class Semaphore {
+  limit;
+  maxQueue;
+  timeout;
+  active = 0;
+  queue = [];
   constructor(limit, maxQueue, timeout) {
-    this.active = 0;
-    this.queue = [];
     this.limit = limit;
     this.maxQueue = maxQueue;
     this.timeout = timeout;
@@ -19519,7 +19528,7 @@ class Semaphore {
   }
 }
 
-// src/core/segmenter.js
+// src/core/segmenter.ts
 var MAX_SEGMENT_CHARS = 9000;
 var MIN_SPLIT_CHARS = 4500;
 var MAX_SEGMENTS = 1e4;
@@ -19585,7 +19594,7 @@ function buildBatches(texts) {
   return batches;
 }
 
-// src/auth/cookie-store.js
+// src/auth/cookie-store.ts
 import { readFile as readFile2 } from "node:fs/promises";
 function parseCookie(text) {
   const cookie = text.trim().replace(/^Cookie:\s*/i, "");
@@ -19606,7 +19615,7 @@ async function loadCookie(path) {
   return parseCookie(text);
 }
 
-// src/admin/accounts.js
+// src/admin/accounts.ts
 var healthSchema = external_exports.object({
   status: external_exports.enum(["unknown", "valid", "invalid", "cooldown"]).default("unknown"),
   reason: external_exports.string().optional(),
@@ -19674,12 +19683,17 @@ function isAccountFailure(error) {
   ].includes(error.code) || ["upstream_http_error", "upstream_incomplete_result"].includes(error.code) && error.retryable);
 }
 
-// src/core/translator.js
+// src/core/translator.ts
 var RETRY_BASE_MS = 250;
 var RETRY_MAX_MS = 5000;
 var MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 
 class Translator {
+  config;
+  client;
+  pool;
+  usage;
+  semaphore;
   constructor(config, client, pool, usage) {
     this.config = config;
     this.client = client;
@@ -19803,13 +19817,14 @@ class Translator {
   }
 }
 
-// src/doubao/sse-parser.js
+// src/doubao/sse-parser.ts
 class SSEParser {
+  emit;
+  decoder = new TextDecoder;
+  buffer = "";
+  event = "message";
+  data = [];
   constructor(emit) {
-    this.decoder = new TextDecoder;
-    this.buffer = "";
-    this.event = "message";
-    this.data = [];
     this.emit = emit;
   }
   push(bytes) {
@@ -19870,7 +19885,7 @@ class SSEParser {
   }
 }
 
-// src/doubao/client.js
+// src/doubao/client.ts
 var ORIGIN = "https://www.doubao.com";
 var MAX_BODY = 8 * 1024 * 1024;
 var knownCodes = {
@@ -19905,6 +19920,9 @@ function buildRequestBody(req) {
 }
 
 class DoubaoClient {
+  config;
+  fetcher;
+  warn;
   constructor(config, fetcher = fetch, warn = () => {}) {
     this.config = config;
     this.fetcher = fetcher;
@@ -20095,7 +20113,7 @@ class DoubaoClient {
   }
 }
 
-// src/doubao/languages.js
+// src/doubao/languages.ts
 var languages = ["en", "ar", "de", "es", "es-ES", "fil", "fr", "id", "it", "ja", "ko", "ms", "pt", "ru", "th", "uz", "vi", "zh", "zh-Hant"];
 var aliases = {
   "zh-cn": "zh",
@@ -20142,7 +20160,7 @@ var languageNames = [
   ["uz", ["Uzbek", "乌兹别克语"]]
 ];
 
-// src/config/env.js
+// src/config/env.ts
 import { dirname, join } from "node:path";
 var positiveInt = (fallback) => external_exports.coerce.number().int().positive().default(fallback);
 var boolEnv = external_exports.enum(["true", "false"]).default("false").transform((x) => x === "true");
@@ -20195,7 +20213,7 @@ function loadConfig(env = process.env) {
   };
 }
 
-// src/core/prompt-parser.js
+// src/core/prompt-parser.ts
 var escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 var names = languageNames.flatMap(([lang, entries]) => entries.map((name) => ({
   lang,
@@ -20250,7 +20268,7 @@ function extractSource(user) {
   return text;
 }
 
-// src/protocols/adapter.js
+// src/protocols/adapter.ts
 var baseSchema = external_exports.object({
   model: external_exports.string().min(1),
   stream: external_exports.boolean().default(false),
@@ -20395,7 +20413,7 @@ function adaptRequest(protocol, input, headerLanguage, defaultScene, requestId, 
   };
 }
 
-// src/protocols/format.js
+// src/protocols/format.ts
 import { randomUUID } from "node:crypto";
 var id = (prefix) => `${prefix}_${randomUUID().replaceAll("-", "")}`;
 function estimateTokens(text) {
@@ -20549,7 +20567,7 @@ function formatSSE(protocol, result, adapted) {
   return frames.join("");
 }
 
-// src/magpie/plugin.js
+// src/magpie/plugin.ts
 var PROVIDER = "doubao-translate";
 var BASE = "https://doubao-translate.invalid/v1";
 var MAX_REQUEST_BYTES = 2 * 1024 * 1024;

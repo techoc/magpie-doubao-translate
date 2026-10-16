@@ -64,10 +64,13 @@ v0.1.2 更新为新的头像图标，并提供无损压缩的 PNG，保留原图
 
 ## 从源码构建
 
-源码按模块拆分为 `src/`，`dist/index.mjs` 由构建脚本打包生成，请勿手工修改。
-构建需要 Bun，测试需要 Node.js 22.18+：
+源码按模块拆分为 `src/`，全部使用 TypeScript，`dist/index.mjs` 由构建脚本打包生成，请勿手工修改。
+构建需要 Bun；类型检查需要 Node.js 与 `npm install` 安装的开发依赖（TypeScript）。
+Node.js 22.18+ 与 Bun 都能直接运行 `.ts`，因此测试不需要预编译步骤：
 
 ```sh
+npm install
+npm run typecheck
 npm run build
 npm test
 magpie plugin add .
@@ -81,9 +84,12 @@ magpie plugin login doubao-translate
 
 | 命令 | 作用 |
 | --- | --- |
+| `npm run typecheck` | 用 `tsc` 做完整类型检查（不产出文件） |
+| `npm run typecheck:watch` | 监听模式类型检查，开发时常驻 |
 | `npm test` | 运行全部单元测试与协议行为测试 |
 | `npm test:watch` | 监听模式跑测试 |
 | `npm run build` | 用 Bun 打包出 `dist/index.mjs` |
+| `npm run verify` | 依次执行类型检查、测试、打包，提交前跑一遍 |
 
 `.github/workflows/ci.yml` 会在推送与 PR 上执行同样的检查，并额外校验
 `dist/index.mjs` 与 `src/` 保持同步（改了源码忘记重新构建会让 CI 失败）。
@@ -156,16 +162,18 @@ magpie provider test doubao-translate doubao-ai
 
 | 路径 | 职责 |
 | --- | --- |
-| `src/magpie/plugin.js` | Magpie 插件入口：供应商注册、Cookie 登录、请求分发 |
+| `src/magpie/plugin.ts` | Magpie 插件入口：供应商注册、Cookie 登录、请求分发 |
+| `src/types.ts` | 跨模块共用的领域类型与宿主接口 |
 | `src/protocols/` | 三种协议的请求适配与响应格式化 |
 | `src/doubao/` | 豆包网页接口客户端、SSE 解析、语言表 |
 | `src/core/` | 错误类型、并发闸门、分段、翻译编排、提示词解析 |
 | `src/auth/`、`src/admin/` | Cookie 解析与导入、账号失败分类 |
 | `src/config/` | 环境变量 schema（插件以自身选项填充） |
 | `src/vendor/zod.js` | 预构建的 Zod v4，供 schema 使用 |
-| `tests/plugin.test.js` | 端到端协议行为测试（模拟豆包上游驱动 loader.fetch） |
-| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.js` | 各模块单元测试（切分、语言、Cookie、协议适配、上游客户端、配置、编排重试） |
-| `scripts/build.js` | 用 Bun 把 `src/` 打包成 `dist/index.mjs` |
+| `src/vendor/zod.d.ts` | 上述打包产物中本项目用到的那部分 API 的类型声明 |
+| `tests/plugin.test.ts` | 端到端协议行为测试（模拟豆包上游驱动 loader.fetch） |
+| `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.ts` | 各模块单元测试（切分、语言、Cookie、协议适配、上游客户端、配置、编排重试） |
+| `scripts/build.ts` | 用 Bun 把 `src/` 打包成 `dist/index.mjs` |
 
 构建后可以创建独立 npm 包，无须运行安装脚本：
 

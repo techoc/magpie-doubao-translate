@@ -9,9 +9,12 @@
     "./server": "./dist/index.mjs"
   },
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "node scripts/build.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "typecheck:watch": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "test": "node --test tests/",
-    "test:watch": "node --test --watch tests/"
+    "test:watch": "node --test --watch tests/",
+    "verify": "npm run typecheck && npm test && npm run build"
   },
   "files": [
     "dist/index.mjs",
@@ -40,5 +43,9 @@
   "magpie": {
     "icon": "https://raw.githubusercontent.com/mu-zi-lee/magpie-doubao-translate/v0.1.2/assets/icon-magpie.png",
     "maxConcurrency": 4
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2"
   }
 }

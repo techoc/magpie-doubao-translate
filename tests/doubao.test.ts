@@ -84,7 +84,7 @@ test("SSEParser 事件之间重置状态", () => {
 // ---------------------------------------------------------------- DoubaoClient 测试脚手架
 
 // 使用不存在的 Cookie 文件路径，强制测试通过 provider 注入 Cookie。
-const config = loadConfig({DOUBAO_COOKIE_FILE: "/tmp/doubao-client-test-missing.txt", DOUBAO_USER_AGENT: "test-agent"});
+const config = loadConfig({DOUBAO_COOKIE_FILE: "/tmp/doubao-client-test-missing.txt"});
 const COOKIE: StoredCookie = {cookie: "sessionid=a; sid_tt=b; uid_tt=c", complete: true};
 const provider = async (): Promise<StoredCookie> => COOKIE;
 const REQ: UpstreamTranslateRequest = {texts: ["Hello"], targetLang: "zh", scene: 2, engine: "1"};
@@ -152,7 +152,7 @@ test("translate 构造上游请求", async () => {
     assert.equal(captured.init.method, "POST");
     assert.equal(captured.init.redirect, "error");
     assert.equal(captured.headers.get("Cookie"), COOKIE.cookie);
-    assert.equal(captured.headers.get("User-Agent"), "test-agent");
+    assert.equal(captured.headers.get("User-Agent"), "Mozilla/5.0");
     assert.deepEqual(JSON.parse(String(captured.init.body)), {
         raw_text: ["Hello"],
         target_lang: "ko",
@@ -160,6 +160,29 @@ test("translate 构造上游请求", async () => {
         scene: 3,
         frontend_source: 1,
     });
+});
+
+// Bun 不会自动提供 User-Agent；缺失时豆包 CDN 会返回 200 空响应。
+test("translate 始终发送 User-Agent，显式配置优先", async () => {
+    const custom = loadConfig({
+        DOUBAO_COOKIE_FILE: "/tmp/doubao-client-test-missing.txt",
+        DOUBAO_USER_AGENT: "test-agent",
+    });
+    let captured: Headers | undefined;
+    const client = new DoubaoClient(custom, async (_url, init) => {
+        captured = new Headers(init?.headers);
+        return sseResponse([{index: 0, res: "你好"}]);
+    }, () => {});
+    await client.translate(REQ, new AbortController().signal, provider);
+    assert.equal(captured?.get("User-Agent"), "test-agent");
+
+    let fallback: Headers | undefined;
+    const defaultClient = new DoubaoClient(config, async (_url, init) => {
+        fallback = new Headers(init?.headers);
+        return sseResponse([{index: 0, res: "你好"}]);
+    }, () => {});
+    await defaultClient.translate(REQ, new AbortController().signal, provider);
+    assert.equal(fallback?.get("User-Agent"), "Mozilla/5.0");
 });
 
 // Cookie 不完整时无法发起请求。

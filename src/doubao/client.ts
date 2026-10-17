@@ -10,6 +10,9 @@ import type { AuthStatus, CookieProvider, StoredCookie, UpstreamTranslateRequest
 import type { EnvConfig } from "../config/env.ts";
 
 const ORIGIN = "https://www.doubao.com";
+// Bun doesn't add a User-Agent on its own. Doubao's CDN then answers an empty
+// 200 text/plain response, so every request must carry one explicitly.
+const DEFAULT_USER_AGENT = "Mozilla/5.0";
 // 响应体大小上限，防止异常上游把内存撑爆。
 const MAX_BODY = 8 * 1024 * 1024;
 // 上游业务错误码 -> 本服务错误码。未列出的错误码按可重试的流错误处理。
@@ -98,7 +101,7 @@ export class DoubaoClient {
         const combined = AbortSignal.any([signal, AbortSignal.timeout(timeout)]);
         const headers = new Headers(init.headers);
         headers.set("Cookie", cookie);
-        if (this.config.DOUBAO_USER_AGENT) headers.set("User-Agent", this.config.DOUBAO_USER_AGENT);
+        headers.set("User-Agent", this.config.DOUBAO_USER_AGENT || DEFAULT_USER_AGENT);
         try {
             const response = await this.fetcher(ORIGIN + path, {...init, headers, signal: combined, redirect: "error"});
             if (!response.ok) {

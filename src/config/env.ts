@@ -4,7 +4,7 @@
 // 同样的结构，从而复用同一套翻译核心，而不是各自读环境变量。
 
 import { dirname, join } from "node:path";
-import { external_exports as z, type ZodOutput } from "../vendor/zod.js";
+import { z } from "zod";
 import { normalizeLanguage } from "../doubao/languages.ts";
 
 // 正整数，带默认值。环境变量一律是字符串，所以先 coerce。
@@ -52,7 +52,7 @@ const envSchema = z.object({
 });
 
 // 校验并补全后的配置对象：schema 字段 + 解析出的 keys + 派生出的 ADMIN_DATA_DIR。
-export type EnvConfig = ZodOutput<typeof envSchema> & {
+export type EnvConfig = z.infer<typeof envSchema> & {
     // 解析后的 API key 列表（API_KEYS 优先，其次 API_KEY，逗号分隔）。
     keys: string[];
     // 管理页数据目录：显式配置优先，否则取 Cookie 文件同级的 admin 子目录。

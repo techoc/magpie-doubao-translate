@@ -9,7 +9,7 @@
 // 不支持的请求能力会明确返回错误。
 
 import { createHash, randomUUID } from "node:crypto";
-import { external_exports as z } from "../vendor/zod.js";
+import { z } from "zod";
 import { loadProviderIcon } from "../assets.ts";
 import { ServiceError, asServiceError, invalid } from "../core/errors.ts";
 import { Translator } from "../core/translator.ts";

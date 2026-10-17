@@ -5,7 +5,7 @@
 // importCookie     插件登录流程与每次请求取 Cookie 都会调用
 // isAccountFailure 供翻译编排判断是否需要切换账号
 
-import { external_exports as z } from "../vendor/zod.js";
+import { z } from "zod";
 import { ServiceError, invalid } from "../core/errors.ts";
 import { parseCookie } from "../auth/cookie-store.ts";
 import type { StoredCookie } from "../types.ts";

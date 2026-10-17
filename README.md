@@ -65,7 +65,8 @@ v0.1.2 更新为新的头像图标，并提供无损压缩的 PNG，保留原图
 ## 从源码构建
 
 源码按模块拆分为 `src/`，全部使用 TypeScript，`dist/index.mjs` 由构建脚本打包生成，请勿手工修改。
-构建需要 Bun；类型检查需要 Node.js 与 `npm install` 安装的开发依赖（TypeScript）。
+构建需要 Bun；类型检查需要 Node.js 与 `npm install` 安装的开发依赖（TypeScript、Zod）。
+Zod 只在构建时使用，打包器会把它内联进 `dist/index.mjs`，因此发布包依旧零依赖。
 Node.js 22.18+ 与 Bun 都能直接运行 `.ts`，因此测试不需要预编译步骤：
 
 ```sh
@@ -169,8 +170,6 @@ magpie provider test doubao-translate doubao-ai
 | `src/core/` | 错误类型、并发闸门、分段、翻译编排、提示词解析 |
 | `src/auth/`、`src/admin/` | Cookie 解析与导入、账号失败分类 |
 | `src/config/` | 环境变量 schema（插件以自身选项填充） |
-| `src/vendor/zod.js` | 预构建的 Zod v4，供 schema 使用 |
-| `src/vendor/zod.d.ts` | 上述打包产物中本项目用到的那部分 API 的类型声明 |
 | `tests/plugin.test.ts` | 端到端协议行为测试（模拟豆包上游驱动 loader.fetch） |
 | `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.ts` | 各模块单元测试（切分、语言、Cookie、协议适配、上游客户端、配置、编排重试） |
 | `scripts/build.ts` | 用 Bun 把 `src/` 打包成 `dist/index.mjs` |

@@ -5,7 +5,7 @@
 // 避免客户端误以为拿到了完整模型能力。系统提示与 instructions 只用于读取目标
 // 语言，不会作为内容送给豆包。
 
-import { external_exports as z } from "../vendor/zod.js";
+import { z } from "zod";
 import { invalid } from "../core/errors.ts";
 import { resolveModel } from "../core/models.ts";
 import { determineLanguage, extractSource } from "../core/prompt-parser.ts";

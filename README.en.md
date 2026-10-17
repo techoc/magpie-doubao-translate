@@ -65,7 +65,8 @@ v0.1.2 refreshes the avatar with a losslessly compressed PNG, preserving the ori
 ## Build from Source
 
 The source lives in `src/`, split by module and written in TypeScript. `dist/index.mjs` is produced by the build script; do not edit it by hand.
-Building requires Bun. Type checking requires Node.js plus the development dependencies installed by `npm install` (TypeScript).
+Building requires Bun. Type checking requires Node.js plus the development dependencies installed by `npm install` (TypeScript and Zod).
+Zod is build-time only: the bundler inlines it into `dist/index.mjs`, so the published package still has zero dependencies.
 Node.js 22.18+ and Bun both run `.ts` directly, so the tests need no pre-compilation step:
 
 ```sh
@@ -170,8 +171,6 @@ The plugin bundles Zod; its MIT license is included in `THIRD_PARTY_LICENSES.txt
 | `src/core/` | Errors, concurrency gate, segmentation, translation orchestration, prompt parsing |
 | `src/auth/`, `src/admin/` | Cookie parsing/import and account failure classification |
 | `src/config/` | Environment schema (the plugin fills it from its own options) |
-| `src/vendor/zod.js` | Prebuilt Zod v4 used by the schemas |
-| `src/vendor/zod.d.ts` | Types for the subset of that prebuilt bundle this project uses |
 | `tests/plugin.test.ts` | End-to-end protocol behaviour tests driven by a simulated upstream |
 | `tests/{core,prompt,cookie,protocols,doubao,config,translator}.test.ts` | Unit tests per module (segmentation, languages, cookies, protocol adaptation, upstream client, config, orchestration and retries) |
 | `scripts/build.ts` | Bundles `src/` into `dist/index.mjs` with Bun |
